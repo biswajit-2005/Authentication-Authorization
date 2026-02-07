@@ -77,4 +77,25 @@ export const googleLogin = async (idToken) => {
   }
 };
 
+export const forgotPassword = async (email) => {
+  try {
+    const response = await api.post("/forgotPassword", { email });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: "Failed to send reset email" };
+  }
+};
+
+export const resetPassword = async (resetPasswordToken, password) => {
+  try {
+    const response = await api.post("/resetPassword", {
+      resetPasswordToken,
+      password,
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: "Failed to reset password" };
+  }
+};
+
 export default api;

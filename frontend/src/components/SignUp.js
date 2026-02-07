@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { signUp, googleLogin } from "../api";
 import "./AuthForm.css";
 
 function SignUp({ onSuccess }) {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -36,7 +38,9 @@ function SignUp({ onSuccess }) {
       );
       setSuccess(response.message);
       setFormData({ name: "", email: "", password: "", role: "user" });
-      setTimeout(() => onSuccess(), 2000);
+      setTimeout(() => {
+        navigate("/verify");
+      }, 2000);
     } catch (err) {
       setError(err.message || "Signup failed");
     } finally {
@@ -52,7 +56,10 @@ function SignUp({ onSuccess }) {
       try {
         const res = await googleLogin(response.credential);
         setSuccess(res.message);
-        setTimeout(() => onSuccess(res.user), 1500);
+        setTimeout(() => {
+          if (onSuccess) onSuccess(res.user);
+          navigate("/dashboard");
+        }, 1500);
       } catch (err) {
         setError(err.message || "Google signup failed");
       }
@@ -131,8 +138,12 @@ function SignUp({ onSuccess }) {
           {loading ? "Signing up..." : "Sign Up"}
         </button>
       </form>
+
       <div id="googleSignInDiv-signup" style={{ marginTop: 12 }} />
-    </div>
+      <div style={{ marginTop: "20px", textAlign: "center" }}>
+        Already have an account? <Link to="/login">Login</Link>
+      </div>
+    </div >
   );
 }
 

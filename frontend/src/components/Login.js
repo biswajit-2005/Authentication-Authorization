@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { login, googleLogin } from "../api";
 import "./AuthForm.css";
 
 function Login({ onSuccess }) {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -29,7 +31,11 @@ function Login({ onSuccess }) {
       const response = await login(formData.email, formData.password);
       setSuccess(response.message);
       setFormData({ email: "", password: "" });
-      setTimeout(() => onSuccess(response.user), 1500);
+
+      setTimeout(() => {
+        onSuccess(response.user);
+        navigate("/dashboard");
+      }, 1500);
     } catch (err) {
       setError(err.message || "Login failed");
     } finally {
@@ -45,7 +51,11 @@ function Login({ onSuccess }) {
       try {
         const res = await googleLogin(response.credential);
         setSuccess(res.message);
-        setTimeout(() => onSuccess(res.user), 1500);
+
+        setTimeout(() => {
+          onSuccess(res.user);
+          navigate("/dashboard");
+        }, 1500);
       } catch (err) {
         setError(err.message || "Google login failed");
       }
@@ -97,8 +107,14 @@ function Login({ onSuccess }) {
         <button type="submit" className="btn btn-primary" disabled={loading}>
           {loading ? "Logging in..." : "Login"}
         </button>
+        <div style={{ marginTop: "10px", textAlign: "center" }}>
+          <Link to="/forgot-password">Forgot Password?</Link>
+        </div>
       </form>
       <div id="googleSignInDiv-login" style={{ marginTop: 12 }} />
+      <div style={{ marginTop: "20px", textAlign: "center" }}>
+        Don't have an account? <Link to="/signup">Sign Up</Link>
+      </div>
     </div>
   );
 }

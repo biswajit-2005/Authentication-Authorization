@@ -1,72 +1,69 @@
 import React, { useState } from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import "./App.css";
 import SignUp from "./components/SignUp";
 import Login from "./components/Login";
 import VerifyEmail from "./components/VerifyEmail";
 import Dashboard from "./components/Dashboard";
+import ForgotPassword from "./components/ForgotPassword";
+import ResetPassword from "./components/ResetPassword";
 
 function App() {
-  const [currentPage, setCurrentPage] = useState("signup");
   const [user, setUser] = useState(null);
 
-  const handleSignUpSuccess = (userData) => {
-    if (userData) {
-      setUser(userData);
-      setCurrentPage("dashboard");
-    } else {
-      setCurrentPage("verify");
-    }
+  const handleSignUpSuccess = () => {
+    // Redirect logic handled by router navigation in components or here if needed
+    // But since components use navigate hooks, we might just pass setters or handle state
   };
 
   const handleLoginSuccess = (userData) => {
     setUser(userData);
-    setCurrentPage("dashboard");
   };
 
   const handleLogout = () => {
     setUser(null);
-    setCurrentPage("login");
   };
 
   return (
-    <div className="app">
-      <div className="container">
-        {currentPage === "signup" && (
-          <div>
-            <SignUp onSuccess={handleSignUpSuccess} />
-            <p className="toggle-page">
-              Already have an account?{" "}
-              <button onClick={() => setCurrentPage("login")}>Login</button>
-            </p>
-          </div>
-        )}
-
-        {currentPage === "login" && (
-          <div>
-            <Login onSuccess={handleLoginSuccess} />
-            <p className="toggle-page">
-              Don't have an account?{" "}
-              <button onClick={() => setCurrentPage("signup")}>Sign Up</button>
-            </p>
-          </div>
-        )}
-
-        {currentPage === "verify" && (
-          <div>
-            <VerifyEmail />
-            <p className="toggle-page">
-              <button onClick={() => setCurrentPage("login")}>
-                Back to Login
-              </button>
-            </p>
-          </div>
-        )}
-
-        {currentPage === "dashboard" && user && (
-          <Dashboard user={user} onLogout={handleLogout} />
-        )}
+    <Router>
+      <div className="app">
+        <div className="container">
+          <Routes>
+            <Route
+              path="/signup"
+              element={
+                <SignUp
+                  onSuccess={(user) => {
+                    if (user) handleLoginSuccess(user); // Google login
+                  }}
+                />
+              }
+            />
+            <Route
+              path="/login"
+              element={<Login onSuccess={handleLoginSuccess} />}
+            />
+            <Route path="/verify" element={<VerifyEmail />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/resetPassword/:token" element={<ResetPassword />} />
+            <Route
+              path="/dashboard"
+              element={
+                user ? (
+                  <Dashboard user={user} onLogout={handleLogout} />
+                ) : (
+                  <Navigate to="/login" />
+                )
+              }
+            />
+            <Route
+              path="/"
+              element={<Navigate to={user ? "/dashboard" : "/login"} />}
+            />
+          </Routes>
+        </div>
       </div>
-    </div>
+    </Router>
   );
 }
 
