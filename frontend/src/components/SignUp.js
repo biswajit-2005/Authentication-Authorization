@@ -52,7 +52,7 @@ function SignUp({ onSuccess }) {
       try {
         const res = await googleLogin(response.credential);
         setSuccess(res.message);
-        setTimeout(() => onSuccess(), 1500);
+        setTimeout(() => onSuccess(res.user), 1500);
       } catch (err) {
         setError(err.message || "Google signup failed");
       }

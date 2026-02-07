@@ -9,8 +9,13 @@ function App() {
   const [currentPage, setCurrentPage] = useState("signup");
   const [user, setUser] = useState(null);
 
-  const handleSignUpSuccess = () => {
-    setCurrentPage("verify");
+  const handleSignUpSuccess = (userData) => {
+    if (userData) {
+      setUser(userData);
+      setCurrentPage("dashboard");
+    } else {
+      setCurrentPage("verify");
+    }
   };
 
   const handleLoginSuccess = (userData) => {
