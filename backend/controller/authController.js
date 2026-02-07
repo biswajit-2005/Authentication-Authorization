@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { generateAccessToken, generateRefreshToken } from "../utils/token.js";
 import { sendEmail } from "../utils/email.js";
+import { OAuth2Client } from "google-auth-library";
 
 export const signUp = async (req, res) => {
   try {
@@ -95,6 +96,73 @@ export const login = async (req, res) => {
   }
 };
 
+export const googleLogin = async (req, res) => {
+  try {
+    let email, name, googleId;
+
+    // If client sends an idToken (recommended), verify it with Google
+    if (req.body.idToken) {
+      const idToken = req.body.idToken;
+      const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+      const ticket = await client.verifyIdToken({
+        idToken,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+      const payload = ticket.getPayload();
+      email = payload.email;
+      name = payload.name || payload.email.split("@")[0];
+      googleId = payload.sub;
+    } else {
+      // fallback to older behavior
+      ({ email, name, googleId } = req.body);
+      if (!email || !name || !googleId) {
+        return res.status(400).json({ message: "all fields are required" });
+      }
+    }
+
+    let user = await User.findOne({ email });
+    if (!user) {
+      user = await User.create({
+        email,
+        name,
+        provider: "google",
+        providerId: googleId,
+        role: "user",
+        isVerified: true,
+      });
+    }
+    const accessToken = generateAccessToken(user);
+    const refreshToken = generateRefreshToken(user);
+    //save refresh token in db
+    user.refreshToken = refreshToken;
+    await user.save();
+    //send access and refresh token in cookie
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "strict",
+      maxAge: 24 * 60 * 60 * 1000,
+    });
+    res.cookie("accessToken", accessToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "strict",
+      maxAge: 15 * 60 * 1000,
+    });
+    res.status(200).json({
+      message: "user logged in successfully",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Google Login failed" });
+  }
+};
 export const verifyMail = async (req, res) => {
   try {
     const { emailtoken } = req.query;

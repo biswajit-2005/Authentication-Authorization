@@ -67,4 +67,14 @@ export const logout = async () => {
   }
 };
 
+// Google login API - send Google idToken to backend for verification
+export const googleLogin = async (idToken) => {
+  try {
+    const response = await api.post("/googleLogin", { idToken });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: "Google login failed" };
+  }
+};
+
 export default api;

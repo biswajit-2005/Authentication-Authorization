@@ -10,9 +10,19 @@ const userSchema = mongoose.Schema({
     required: true,
     unique: true,
   },
+  provider: {
+    type: String,
+    enum: ["local", "google", "facebook"],
+    default: "local",
+  },
+  providerId: {
+    type: String,
+  },
   password: {
     type: String,
-    required: true,
+    required: function () {
+      return this.provider === "local";
+    },
   },
   role: {
     type: String,
@@ -28,6 +38,10 @@ const userSchema = mongoose.Schema({
   },
   resetPasswordToken: String,
   resetPasswordTokenExpiry: Date,
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
 const user = mongoose.model("user", userSchema);

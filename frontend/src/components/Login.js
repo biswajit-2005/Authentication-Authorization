@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { login } from "../api";
+import React, { useState, useEffect } from "react";
+import { login, googleLogin } from "../api";
 import "./AuthForm.css";
 
 function Login({ onSuccess }) {
@@ -36,6 +36,30 @@ function Login({ onSuccess }) {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
+    if (!window.google || !clientId) return;
+
+    const handleCredentialResponse = async (response) => {
+      try {
+        const res = await googleLogin(response.credential);
+        setSuccess(res.message);
+        setTimeout(() => onSuccess(res.user), 1500);
+      } catch (err) {
+        setError(err.message || "Google login failed");
+      }
+    };
+
+    window.google.accounts.id.initialize({
+      client_id: clientId,
+      callback: handleCredentialResponse,
+    });
+    window.google.accounts.id.renderButton(
+      document.getElementById("googleSignInDiv-login"),
+      { theme: "outline", size: "large" },
+    );
+  }, [onSuccess]);
 
   return (
     <div className="auth-form">
@@ -74,6 +98,7 @@ function Login({ onSuccess }) {
           {loading ? "Logging in..." : "Login"}
         </button>
       </form>
+      <div id="googleSignInDiv-login" style={{ marginTop: 12 }} />
     </div>
   );
 }
